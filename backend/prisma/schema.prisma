@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model alertarecordatorio {
+  alerta_id                      Int                 @id @default(autoincrement())
+  tipoAlerta                     String              @db.VarChar(50)
+  alertaRecordatorio_Descripcion String?             @db.VarChar(255)
+  destinatario_id                Int?
+  paciente                       paciente?           @relation(fields: [destinatario_id], references: [paciente_id], onDelete: Cascade, onUpdate: NoAction, map: "alertarecordatorio_ibfk_1")
+  medicoespecialista             medicoespecialista? @relation(fields: [destinatario_id], references: [medico_id], onDelete: Cascade, onUpdate: NoAction, map: "alertarecordatorio_ibfk_2")
+
+  @@index([destinatario_id], map: "destinatario_id")
+}
+
+model citamedica {
+  citaMedica_id                       Int                @id @default(autoincrement())
+  paciente_id                         Int
+  medico_id                           Int
+  citaMedica_fechaHoraCita            DateTime           @db.DateTime(0)
+  citaMedica_instruccionesAdicionales String?            @db.Text
+  paciente                            paciente           @relation(fields: [paciente_id], references: [paciente_id], onDelete: NoAction, onUpdate: NoAction, map: "citamedica_ibfk_1")
+  medicoespecialista                  medicoespecialista @relation(fields: [medico_id], references: [medico_id], onDelete: NoAction, onUpdate: NoAction, map: "citamedica_ibfk_2")
+  historialcita                       historialcita[]
+
+  @@index([medico_id], map: "medico_id")
+  @@index([paciente_id], map: "paciente_id")
+}
+
+model historialcita {
+  historial_id                     Int        @id @default(autoincrement())
+  citaMedica_id                    Int
+  historialCita_diagnostico        String?    @db.Text
+  historial_tratamientoRecomendado String?    @db.Text
+  citamedica                       citamedica @relation(fields: [citaMedica_id], references: [citaMedica_id], onDelete: NoAction, onUpdate: NoAction, map: "historialcita_ibfk_1")
+
+  @@index([citaMedica_id], map: "citaMedica_id")
+}
+
+model medicoespecialista {
+  medico_id                         Int                  @id @default(autoincrement())
+  medicoEspecialista_nombre         String               @db.VarChar(255)
+  medicoEspecialista_apellido       String               @db.VarChar(255)
+  medicoEspecialista_especialidad   String               @db.VarChar(100)
+  medicoEspecialista_email          String               @db.VarChar(255)
+  medicoEspecialista_numeroContacto String               @db.VarChar(15)
+  alertarecordatorio                alertarecordatorio[]
+  citamedica                        citamedica[]
+}
+
+model paciente {
+  paciente_id              Int                  @id @default(autoincrement())
+  paciente_nombre          String               @db.VarChar(255)
+  paciente_apellido        String               @db.VarChar(255)
+  paciente_direccion       String               @db.VarChar(255)
+  paciente_email           String               @db.VarChar(255)
+  paciente_numeroContacto  String               @db.VarChar(15)
+  paciente_historialMedico String?              @db.Text
+  alertarecordatorio       alertarecordatorio[]
+  citamedica               citamedica[]
+}
